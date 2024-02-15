@@ -3,13 +3,14 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 import { useEffect,useState,useRef } from 'react';
 import {Audio} from 'expo-av'
 import Slider from '@react-native-community/slider';
+import audioFile from "./assets/bubble.wav"
 
 export default function App() {
-  const [sound, setSound] = useState();
+  // const [sound,setSound] = useState()
   const [bpm,setBpm] = useState(180)
   const [sliderValue,setSliderValue] = useState(0)
   const [metronome,setMetronome] = useState(false)
-
+  const intervalRef = useRef(0)
 
   // async function playAudioClip() {
   //   console.log("Loading Sound");
@@ -19,15 +20,41 @@ export default function App() {
   //   await sound.playAsync();
   // }
   function stopMetronome() {
-    setMetronome(false) 
-    sound.unloadAsync()
+    // setMetronome(false) 
+    clearInterval(intervalRef.current)
   }
   async function playMetronome() {
-    const {sound} = await Audio.Sound.createAsync(require('./assets/bubble.wav'));
-    setSound(sound)
-    // setMetronome(true)
-    sound.playAsync()
-    sound.setIsLoopingAsync(true)
+    
+    // setSound(sound)
+    // // setMetronome(true)
+
+    // sound.playAsync()
+    // sound.setIsLoopingAsync(true)
+    clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(async()=> {
+      // try {
+      //   const sound = await Audio.Sound.createAsync(audioFile,{shouldPlay:true,isLooping:true});
+      //   await sound.playAsync()
+      //   sound.unloadAsync();
+      //   console.log("Do it")
+      // }
+      // catch (error){
+      //   console.error("Something happened: "+error)
+      // }
+      Audio.Sound.createAsync(
+        audioFile,
+        { shouldPlay: true }
+      ).then((res)=>{
+        res.sound.setOnPlaybackStatusUpdate((status)=>{
+          if(!status.didJustFinish) return;
+          console.log('Unloading ');
+          res.sound.unloadAsync().catch(()=>{});
+        });
+      }).catch((error)=>{});
+    
+      
+    },250)
+    
   }
 
   // while (metronome === true) {
