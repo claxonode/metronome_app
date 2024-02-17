@@ -1,15 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import { useEffect,useState,useRef } from 'react';
-import {Audio} from 'expo-av'
+import {Audio, InterruptionModeAndroid, InterruptionModeIOS} from 'expo-av'
 import Slider from '@react-native-community/slider';
 import audioFile from "./assets/bubble.wav"
 
 export default function App() {
-  // const [sound,setSound] = useState()
-  const [bpm,setBpm] = useState(180)
-  const [sliderValue,setSliderValue] = useState(0)
-  const [metronome,setMetronome] = useState(false)
+  const [sound,setSound] = useState()
+  const [bpm,setBpm] = useState(120)
+  const [sliderValue,setSliderValue] = useState(1)
+  const [isPlaying,setIsPlaying] = useState(false)
   const intervalRef = useRef(0)
 
   // async function playAudioClip() {
@@ -20,9 +20,24 @@ export default function App() {
   //   await sound.playAsync();
   // }
   function stopMetronome() {
-    // setMetronome(false) 
+    setIsPlaying(false) 
     clearInterval(intervalRef.current)
   }
+
+  useEffect(()=>{
+    Audio.setAudioModeAsync({
+      staysActiveInBackground: true,
+      playsInSilentModeIOS: true,
+      interruptionModeIOS:InterruptionModeIOS.DuckOthers,
+      interruptionModeAndroid:InterruptionModeAndroid.DuckOthers,
+      shouldDuckAndroid:true,
+      playThroughEarpieceAndroid:true
+    })
+    return sound? ()=> {
+      sound.unloadAsync();
+    } : undefined
+  },[sound]);
+
   async function playMetronome() {
     
     // setSound(sound)
@@ -31,30 +46,32 @@ export default function App() {
     // sound.playAsync()
     // sound.setIsLoopingAsync(true)
     clearInterval(intervalRef.current)
+    
     intervalRef.current = setInterval(async()=> {
-      // try {
-      //   const sound = await Audio.Sound.createAsync(audioFile,{shouldPlay:true,isLooping:true});
-      //   await sound.playAsync()
-      //   sound.unloadAsync();
-      //   console.log("Do it")
-      // }
-      // catch (error){
-      //   console.error("Something happened: "+error)
-      // }
-      Audio.Sound.createAsync(
-        audioFile,
-        { shouldPlay: true }
-      ).then((res)=>{
-        res.sound.setOnPlaybackStatusUpdate((status)=>{
-          if(!status.didJustFinish) return;
-          console.log('Unloading ');
-          res.sound.unloadAsync().catch(()=>{});
-        });
-      }).catch((error)=>{});
-    
+
+      //immediately play upon creation, then unload, catch do nothing?
       
-    },250)
+      // Audio.Sound.createAsync(
+      //   audioFile,
+      //   { shouldPlay: true}
+      // ).then((res)=>{
+      //   res.sound.setOnPlaybackStatusUpdate((status)=>{
+      //     if(!status.didJustFinish) return;
+      //     //sound needs to be unloaded when sound finishes to prevent memory leaks
+      //     res.sound.unloadAsync().catch(()=>{});
+      //   });
+      // }).catch((error)=>{});
     
+      const {sound} = await Audio.Sound.createAsync(audioFile)
+      setSound(sound)
+      setIsPlaying(true)
+      sound.playAsync().then(()=> {
+        sound._onPlaybackStatusUpdate((status)=> {
+          if (!status.didJustFinish) return;
+          sound.unloadAsync().catch(()=>{})
+        })
+      }).catch((error)=>{})
+    },400)
   }
 
   // while (metronome === true) {
@@ -87,7 +104,7 @@ export default function App() {
         minimumValue={0} maximumValue={1} onValueChange={(value)=>{setSliderValue(value)}}
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
-      <Text>Slider value: {sliderValue}</Text>
+      <Text>Volume: {sliderValue}</Text>
     </View>
   );
 }
