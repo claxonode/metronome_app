@@ -1,10 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, AppState } from 'react-native';
 import { useEffect,useState,useRef } from 'react';
 import {Audio, InterruptionModeAndroid, InterruptionModeIOS} from 'expo-av'
 import Slider from '@react-native-community/slider';
 import audioFile from "./assets/bubble.wav"
 import {bpmToMilliseconds} from "./utils/bpm.js"
+// import BackgroundJob from 'react-native-background-job'
+// import BackgroundTimer from 'react-native-background-timer';
 
 export default function App() {
   const [sound,setSound] = useState()
@@ -14,6 +16,7 @@ export default function App() {
   const [isPlaying,setIsPlaying] = useState(false)
   const intervalRef = useRef(0)
   const metronomeSpeed = bpmToMilliseconds(bpm,tempo)
+  const appState = useRef(AppState.currentState)
 
   function stopMetronome() {
     setIsPlaying(false) 
@@ -38,21 +41,11 @@ export default function App() {
     setIsPlaying(true)
     clearInterval(intervalRef.current)
     
-    intervalRef.current = setInterval(async()=> {
-      //immediately play upon creation, then unload, catch do nothing?
-      
-      Audio.Sound.createAsync(
-        audioFile,
-        { shouldPlay: true, volume:volume}
-      ).then((res)=>{
-        res.sound.setOnPlaybackStatusUpdate((status)=>{
-          if(!status.didJustFinish) return;
-          //sound needs to be unloaded when sound finishes to prevent memory leaks
-          res.sound.unloadAsync().catch(()=>{});
-        });
-      }).catch((error)=>{});
-    
-    },metronomeSpeed)
+    intervalRef.current = play(volume, metronomeSpeed)
+    // intervalRef.current = setInterval((audioFile,volume)=>playMetronome(audioFile,volume),
+    // metronomeSpeed)
+    // console.log(intervalRef.current)
+    // intervalRef.current = playBackground(volume,metronomeSpeed)
   }
 
   // while (metronome === true) {
@@ -67,10 +60,15 @@ export default function App() {
   //   }: undefined
   // },[sound])
   useEffect(()=> {
-    if (isPlaying) {
+    if (isPlaying && appState === 'active') {
+      stopBackground()
       playMetronome()
     }
-  },[bpm,volume,tempo])
+    if (appState === 'background' && isPlaying) {
+      stopMetronome()
+      playBackground()
+    }
+  },[bpm,volume,tempo,appState])
 
   return (
     <View style={styles.container}>
@@ -97,6 +95,7 @@ export default function App() {
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
       <Text>Tempo: 1/{tempo}</Text>
+      <Button title='Play background' onPress={()=>playBackground(volume,metronomeSpeed)}/>
     </View>
   );
 }
@@ -109,3 +108,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+function play(volume, metronomeSpeed) {
+  return setInterval(() => {
+    //immediately play upon creation, then unload, catch do nothing?
+    Audio.Sound.createAsync(
+      audioFile,
+      { shouldPlay: true, volume: volume }
+    ).then((res) => {
+      res.sound.setOnPlaybackStatusUpdate((status) => {
+        if (!status.didJustFinish) return;
+        //sound needs to be unloaded when sound finishes to prevent memory leaks
+        res.sound.unloadAsync().catch(() => { });
+      });
+    }).catch((error) => { });
+    console.log("It ran active")
+  }, metronomeSpeed);
+}
+
+function playBackground(volume, metronomeSpeed) {
+  BackgroundTimer.runBackgroundTimer(() => {
+    //immediately play upon creation, then unload, catch do nothing?
+    Audio.Sound.createAsync(
+      audioFile,
+      { shouldPlay: true, volume: volume }
+    ).then((res) => {
+      res.sound.setOnPlaybackStatusUpdate((status) => {
+        if (!status.didJustFinish) return;
+        //sound needs to be unloaded when sound finishes to prevent memory leaks
+        res.sound.unloadAsync().catch(() => { });
+      });
+    }).catch((error) => { });
+    console.log("It ran background")
+  }, metronomeSpeed);
+}
+function stopBackground() {
+  BackgroundTimer.stopBackgroundTimer();
+}
+
