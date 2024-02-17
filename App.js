@@ -4,21 +4,17 @@ import { useEffect,useState,useRef } from 'react';
 import {Audio, InterruptionModeAndroid, InterruptionModeIOS} from 'expo-av'
 import Slider from '@react-native-community/slider';
 import audioFile from "./assets/bubble.wav"
+import {bpmToMilliseconds} from "./utils/bpm.js"
 
 export default function App() {
   const [sound,setSound] = useState()
   const [bpm,setBpm] = useState(120)
-  const [sliderValue,setSliderValue] = useState(1)
+  const [tempo,setTempo] = useState(4) // Represented as a number of 4 so 1/4
+  const [volume,setVolume] = useState(1)
   const [isPlaying,setIsPlaying] = useState(false)
   const intervalRef = useRef(0)
+  const metronomeSpeed = bpmToMilliseconds(bpm,tempo)
 
-  // async function playAudioClip() {
-  //   console.log("Loading Sound");
-    
-  //   setSound(sound)
-  //   console.log("Playing Sound");
-  //   await sound.playAsync();
-  // }
   function stopMetronome() {
     setIsPlaying(false) 
     clearInterval(intervalRef.current)
@@ -39,21 +35,15 @@ export default function App() {
   },[sound]);
 
   async function playMetronome() {
-    
-    // setSound(sound)
-    // // setMetronome(true)
-
-    // sound.playAsync()
-    // sound.setIsLoopingAsync(true)
+    setIsPlaying(true)
     clearInterval(intervalRef.current)
     
     intervalRef.current = setInterval(async()=> {
-
       //immediately play upon creation, then unload, catch do nothing?
       
       Audio.Sound.createAsync(
         audioFile,
-        { shouldPlay: true}
+        { shouldPlay: true, volume:volume}
       ).then((res)=>{
         res.sound.setOnPlaybackStatusUpdate((status)=>{
           if(!status.didJustFinish) return;
@@ -62,16 +52,7 @@ export default function App() {
         });
       }).catch((error)=>{});
     
-      // const {sound} = await Audio.Sound.createAsync(audioFile)
-      // setSound(sound)
-      // setIsPlaying(true)
-      // sound.playAsync().then(()=> {
-      //   sound._onPlaybackStatusUpdate((status)=> {
-      //     if (!status.didJustFinish) return;
-      //     sound.unloadAsync().catch(()=>{})
-      //   })
-      // }).catch((error)=>{})
-    },140)
+    },metronomeSpeed)
   }
 
   // while (metronome === true) {
@@ -85,6 +66,11 @@ export default function App() {
   //     sound.unloadAsync()
   //   }: undefined
   // },[sound])
+  useEffect(()=> {
+    if (isPlaying) {
+      playMetronome()
+    }
+  },[bpm,volume,tempo])
 
   return (
     <View style={styles.container}>
@@ -94,17 +80,23 @@ export default function App() {
       <StatusBar style="auto" />
 
       <Slider 
-        style={{width:200,height:40}} 
-        minimumValue={120} maximumValue={200} step={1} onValueChange={(value)=>{setBpm(value)}}
+        style={{width:200,height:40}} value={bpm}
+        minimumValue={120} maximumValue={240} step={1} onValueChange={(value)=>{setBpm(value)}}
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
       <Text>Bpm: {bpm}</Text>
       <Slider 
-        style={{width:200,height:40}} 
-        minimumValue={0} maximumValue={1} onValueChange={(value)=>{setSliderValue(value)}}
+        style={{width:200,height:40}} step={0.1} value={volume}
+        minimumValue={0} maximumValue={1} onValueChange={(value)=>{setVolume(value)}}
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
-      <Text>Volume: {sliderValue}</Text>
+      <Text>Volume: {volume.toFixed(1)}</Text>
+      <Slider 
+        style={{width:200,height:40}} step={4}
+        minimumValue={4} maximumValue={16} onValueChange={(value)=>{setTempo(value)}}
+        minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
+      />
+      <Text>Tempo: 1/{tempo}</Text>
     </View>
   );
 }
