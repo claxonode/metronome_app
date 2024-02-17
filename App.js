@@ -51,27 +51,27 @@ export default function App() {
 
       //immediately play upon creation, then unload, catch do nothing?
       
-      // Audio.Sound.createAsync(
-      //   audioFile,
-      //   { shouldPlay: true}
-      // ).then((res)=>{
-      //   res.sound.setOnPlaybackStatusUpdate((status)=>{
-      //     if(!status.didJustFinish) return;
-      //     //sound needs to be unloaded when sound finishes to prevent memory leaks
-      //     res.sound.unloadAsync().catch(()=>{});
-      //   });
-      // }).catch((error)=>{});
+      Audio.Sound.createAsync(
+        audioFile,
+        { shouldPlay: true}
+      ).then((res)=>{
+        res.sound.setOnPlaybackStatusUpdate((status)=>{
+          if(!status.didJustFinish) return;
+          //sound needs to be unloaded when sound finishes to prevent memory leaks
+          res.sound.unloadAsync().catch(()=>{});
+        });
+      }).catch((error)=>{});
     
-      const {sound} = await Audio.Sound.createAsync(audioFile)
-      setSound(sound)
-      setIsPlaying(true)
-      sound.playAsync().then(()=> {
-        sound._onPlaybackStatusUpdate((status)=> {
-          if (!status.didJustFinish) return;
-          sound.unloadAsync().catch(()=>{})
-        })
-      }).catch((error)=>{})
-    },400)
+      // const {sound} = await Audio.Sound.createAsync(audioFile)
+      // setSound(sound)
+      // setIsPlaying(true)
+      // sound.playAsync().then(()=> {
+      //   sound._onPlaybackStatusUpdate((status)=> {
+      //     if (!status.didJustFinish) return;
+      //     sound.unloadAsync().catch(()=>{})
+      //   })
+      // }).catch((error)=>{})
+    },140)
   }
 
   // while (metronome === true) {

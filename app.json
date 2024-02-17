@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permission":["WAKE_LOCK"]
+      "permissions":["WAKE_LOCK"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
