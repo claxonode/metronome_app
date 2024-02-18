@@ -21,7 +21,7 @@ export default function App() {
 
   function stopMetronome() {
     setIsPlaying(false) 
-    clearInterval(intervalRef.current)
+    BackgroundTimer.clearInterval(intervalRef.current)
   }
 
   useEffect(()=>{
@@ -80,41 +80,40 @@ export default function App() {
     // }
   },[bpm,volume,tempo])
 
-  useEffect(()=> {
-    const sub = AppState.addEventListener('change', state=> {
-      if (state === "background" && isPlaying === true) {
-        console.log("Play in background")
-        stopMetronome()
-        setIsPlaying(true)
-        intervalRef.current = BackgroundTimer.setInterval(()=> {
-            //immediately play upon creation, then unload, catch do nothing?
-            Audio.Sound.createAsync(
-              audioFile,
-              { shouldPlay: true, volume: volume }
-            ).then((res) => {
-              res.sound.setOnPlaybackStatusUpdate((status) => {
-                if (!status.didJustFinish) return;
-                //sound needs to be unloaded when sound finishes to prevent memory leaks
-                res.sound.unloadAsync().catch(() => { });
-              });
-            }).catch((error) => { });
-          }, metronomeSpeed);
-      }
-      if (state ==="active" && isPlaying === true) {
-        console.log("Return to active")
-        BackgroundTimer.clearInterval(intervalRef.current)
-        stopMetronome()
-        playMetronome()
-      }
-    })
-    return ()=> {sub.remove()}
-  })
+  // useEffect(()=> {
+  //   const sub = AppState.addEventListener('change', state=> {
+  //     if (state === "background" && isPlaying === true) {
+  //       console.log("Play in background")
+  //       stopMetronome()
+  //       playMetronome()
+  //       // intervalRef.current = BackgroundTimer.setInterval(()=> {
+  //       //     //immediately play upon creation, then unload, catch do nothing?
+  //       //     Audio.Sound.createAsync(
+  //       //       audioFile,
+  //       //       { shouldPlay: true, volume: volume }
+  //       //     ).then((res) => {
+  //       //       res.sound.setOnPlaybackStatusUpdate((status) => {
+  //       //         if (!status.didJustFinish) return;
+  //       //         //sound needs to be unloaded when sound finishes to prevent memory leaks
+  //       //         res.sound.unloadAsync().catch(() => { });
+  //       //       });
+  //       //     }).catch((error) => { });
+  //       //   }, metronomeSpeed);
+  //     }
+  //     if (state ==="active" && isPlaying === true) {
+  //       console.log("Return to active")
+  //       // BackgroundTimer.clearInterval(intervalRef.current)
+  //       stopMetronome()
+  //       playMetronome()
+  //     }
+  //   })
+  //   return ()=> {sub.remove()}
+  // })
 
   return (
     <View style={styles.container}>
       <Text>Open up App.js to start working on your app!</Text>
-      <Button title='Play Metronome' onPress={playMetronome} ></Button>
-      <Button title='Stop Metronome' onPress={stopMetronome} ></Button>
+      <Button title={isPlaying?"Stop":"Play"} onPress={isPlaying?stopMetronome:playMetronome} ></Button>
       <StatusBar style="auto" />
 
       <Slider 
@@ -135,7 +134,6 @@ export default function App() {
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
       <Text>Tempo: 1/{tempo}</Text>
-      {/* <Button title='Play background' onPress={()=>playBackground(volume,metronomeSpeed)}/> */}
     </View>
   );
 }
@@ -149,7 +147,7 @@ const styles = StyleSheet.create({
   },
 });
 function play(volume, metronomeSpeed) {
-  return setInterval(() => {
+  return BackgroundTimer.setInterval(() => {
     //immediately play upon creation, then unload, catch do nothing?
     Audio.Sound.createAsync(
       audioFile,
@@ -164,23 +162,4 @@ function play(volume, metronomeSpeed) {
   }, metronomeSpeed);
 }
 
-function playBackground(volume, metronomeSpeed) {
-  clearInterval(intervalRef.current)
-  setInterval(() => {
-    //immediately play upon creation, then unload, catch do nothing?
-    Audio.Sound.createAsync(
-      audioFile,
-      { shouldPlay: true, volume: volume }
-    ).then((res) => {
-      res.sound.setOnPlaybackStatusUpdate((status) => {
-        if (!status.didJustFinish) return;
-        //sound needs to be unloaded when sound finishes to prevent memory leaks
-        res.sound.unloadAsync().catch(() => { });
-      });
-    }).catch((error) => { });
-  }, metronomeSpeed);
-}
-function stopBackground() {
-  clearInterval(intervalRef.current)
-}
 

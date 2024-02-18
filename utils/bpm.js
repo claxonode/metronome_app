@@ -7,10 +7,10 @@ export const bpmToMilliseconds = (bpm,tempo) => {
     return durationOfQuarterNote * 4/tempo
 }
 
-export const bpmToSeconds = (bpm,tempo) => {
-  const ONE_MILLISECOND_TO_ONE_SECOND = 1000
-  return bpmToMilliseconds(bpm,tempo) / ONE_MILLISECOND_TO_ONE_SECOND
-}
+// export const bpmToSeconds = (bpm,tempo) => {
+//   const ONE_MILLISECOND_TO_ONE_SECOND = 1000
+//   return bpmToMilliseconds(bpm,tempo) / ONE_MILLISECOND_TO_ONE_SECOND
+// }
 
 
 export const playMetronome = (audioFile,volume, metronomeSpeed) => {
