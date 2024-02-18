@@ -6,7 +6,8 @@ import Slider from '@react-native-community/slider';
 import audioFile from "./assets/bubble.wav"
 import {bpmToMilliseconds} from "./utils/bpm.js"
 // import BackgroundJob from 'react-native-background-job'
-// import BackgroundTimer from 'react-native-background-timer';
+import BackgroundTimer from 'react-native-background-timer';
+
 
 export default function App() {
   const [sound,setSound] = useState()
@@ -40,6 +41,7 @@ export default function App() {
   async function playMetronome() {
     setIsPlaying(true)
     clearInterval(intervalRef.current)
+    // BackgroundTimer.stop(intervalRef.current)
     
     intervalRef.current = play(volume, metronomeSpeed)
     // intervalRef.current = setInterval((audioFile,volume)=>playMetronome(audioFile,volume),
@@ -60,15 +62,53 @@ export default function App() {
   //   }: undefined
   // },[sound])
   useEffect(()=> {
-    if (isPlaying && appState === 'active') {
-      stopBackground()
+    
+    if (isPlaying) {
+      stopMetronome()
       playMetronome()
     }
-    if (appState === 'background' && isPlaying) {
-      stopMetronome()
-      playBackground()
-    }
-  },[bpm,volume,tempo,appState])
+    // if (isPlaying && appState.current === 'active') {
+    //   // console.log("Hi")
+    //   stopMetronome()
+    //   playMetronome()
+
+    // }
+    // if (isPlaying && appState.current === 'background' ) {
+    //   // console.log("Bye")
+    //   stopMetronome()
+    //   playMetronome()
+    // }
+  },[bpm,volume,tempo])
+
+  useEffect(()=> {
+    const sub = AppState.addEventListener('change', state=> {
+      if (state === "background" && isPlaying === true) {
+        console.log("Play in background")
+        stopMetronome()
+        setIsPlaying(true)
+        intervalRef.current = BackgroundTimer.setInterval(()=> {
+            //immediately play upon creation, then unload, catch do nothing?
+            Audio.Sound.createAsync(
+              audioFile,
+              { shouldPlay: true, volume: volume }
+            ).then((res) => {
+              res.sound.setOnPlaybackStatusUpdate((status) => {
+                if (!status.didJustFinish) return;
+                //sound needs to be unloaded when sound finishes to prevent memory leaks
+                res.sound.unloadAsync().catch(() => { });
+              });
+            }).catch((error) => { });
+          }, metronomeSpeed);
+      }
+      if (state ==="active" && isPlaying === true) {
+        console.log("Return to active")
+        BackgroundTimer.clearInterval(intervalRef.current)
+        stopMetronome()
+        playMetronome()
+      }
+    })
+    return ()=> {sub.remove()}
+  })
 
   return (
     <View style={styles.container}>
@@ -95,7 +135,7 @@ export default function App() {
         minimumTrackTintColor='#000000' maximumTrackTintColor="#000000"
       />
       <Text>Tempo: 1/{tempo}</Text>
-      <Button title='Play background' onPress={()=>playBackground(volume,metronomeSpeed)}/>
+      {/* <Button title='Play background' onPress={()=>playBackground(volume,metronomeSpeed)}/> */}
     </View>
   );
 }
@@ -121,12 +161,12 @@ function play(volume, metronomeSpeed) {
         res.sound.unloadAsync().catch(() => { });
       });
     }).catch((error) => { });
-    console.log("It ran active")
   }, metronomeSpeed);
 }
 
 function playBackground(volume, metronomeSpeed) {
-  BackgroundTimer.runBackgroundTimer(() => {
+  clearInterval(intervalRef.current)
+  setInterval(() => {
     //immediately play upon creation, then unload, catch do nothing?
     Audio.Sound.createAsync(
       audioFile,
@@ -138,10 +178,9 @@ function playBackground(volume, metronomeSpeed) {
         res.sound.unloadAsync().catch(() => { });
       });
     }).catch((error) => { });
-    console.log("It ran background")
   }, metronomeSpeed);
 }
 function stopBackground() {
-  BackgroundTimer.stopBackgroundTimer();
+  clearInterval(intervalRef.current)
 }
 
