@@ -1,5 +1,6 @@
 import { Audio } from "expo-av";
 
+
 export const setupAudio = () => {
     Audio.setAudioModeAsync({
         staysActiveInBackground: true,

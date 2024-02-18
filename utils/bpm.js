@@ -1,4 +1,3 @@
-import {Audio} from "expo-av"
 
 export const bpmToMilliseconds = (bpm,tempo) => {
     const ONE_MINUTE_IN_MILLISECONDS = 60000
@@ -13,19 +12,19 @@ export const bpmToMilliseconds = (bpm,tempo) => {
 // }
 
 
-export const playMetronome = (audioFile,volume, metronomeSpeed) => {
-    return setInterval(() => {
-      //immediately play upon creation, then unload, catch do nothing?
-      Audio.Sound.createAsync(
-        audioFile,
-        { shouldPlay: true, volume: volume }
-      ).then((res) => {
-        res.sound.setOnPlaybackStatusUpdate((status) => {
-          if (!status.didJustFinish) return;
-          //sound needs to be unloaded when sound finishes to prevent memory leaks
-          res.sound.unloadAsync().catch(() => { });
-        });
-      }).catch((error) => { });
+// export const playMetronome = (audioFile,volume, metronomeSpeed) => {
+//     return setInterval(() => {
+//       //immediately play upon creation, then unload, catch do nothing?
+//       Audio.Sound.createAsync(
+//         audioFile,
+//         { shouldPlay: true, volume: volume }
+//       ).then((res) => {
+//         res.sound.setOnPlaybackStatusUpdate((status) => {
+//           if (!status.didJustFinish) return;
+//           //sound needs to be unloaded when sound finishes to prevent memory leaks
+//           res.sound.unloadAsync().catch(() => { });
+//         });
+//       }).catch((error) => { });
   
-    }, metronomeSpeed);
-  }
+//     }, metronomeSpeed);
+//   }
