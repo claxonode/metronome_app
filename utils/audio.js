@@ -1,4 +1,4 @@
-import { Audio } from "expo-av";
+import { Audio,InterruptionModeAndroid,InterruptionModeIOS } from "expo-av";
 
 
 export const setupAudio = () => {
