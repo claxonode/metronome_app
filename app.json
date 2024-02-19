@@ -17,7 +17,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes":["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -25,10 +27,18 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions":["WAKE_LOCK"]
+      "permissions": [
+        "WAKE_LOCK"
+      ],
+      "package": "com.reactingmachine.metronome_app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e0ce278e-11e0-4549-82fd-d7dd39ca68b0"
+      }
     }
   }
 }

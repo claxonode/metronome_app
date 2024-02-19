@@ -1,15 +1,31 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button, AppState } from 'react-native';
 import { useEffect,useState,useRef } from 'react';
-// import {Audio} from 'expo-av'
+import {Audio} from 'expo-av'
 import Slider from '@react-native-community/slider';
-import audioFile from "./assets/bubble.wav"
+import bubblesound from "./assets/bubble.wav"
 import {bpmToMilliseconds} from "./utils/bpm.js"
 // import BackgroundJob from 'react-native-background-job'
 import BackgroundTimer from 'react-native-background-timer';
 
 import {setupAudio} from './utils/audio.js'
 import Metronome from './utils/metronome.js'
+
+// function play(volume,metronomeSpeed) {
+//   return setInterval(() => {
+//     //immediately play upon creation, then unload, catch do nothing?
+//     Audio.Sound.createAsync(
+//       audioFile,
+//       { shouldPlay: true, volume: volume }
+//     ).then((res) => {
+//       res.sound.setOnPlaybackStatusUpdate((status) => {
+//         if (!status.didJustFinish) return;
+//         //sound needs to be unloaded when sound finishes to prevent memory leaks
+//         res.sound.unloadAsync().catch(() => { });
+//       });
+//     }).catch((error) => { });
+//   }, metronomeSpeed);
+// }
 
 export default function App() {
   // const [sound,setSound] = useState()
@@ -21,12 +37,14 @@ export default function App() {
   const metronomeSpeed = bpmToMilliseconds(bpm,tempo)
   const appState = useRef(AppState.currentState)
 
-  
+
   useEffect(()=> {
     setupAudio();
   },[]);
   useEffect(()=> {
     if (isPlaying) {
+      // stopMetronome()
+      // playMetronome()
       stopMetronome()
       playMetronome()
     }
@@ -34,15 +52,25 @@ export default function App() {
   
   function stopMetronome() {
     setIsPlaying(false) 
-    Metronome.stop(intervalRef.current)
+    // Metronome.stop(intervalRef.current)
+    Metronome.stopBackground(intervalRef.current)
   }
-  async function playMetronome() {
+  function playMetronome() {
     setIsPlaying(true)
     // clearInterval(intervalRef.current)
-    // BackgroundTimer.stop(intervalRef.current)
-    intervalRef.current = Metronome.play(volume, metronomeSpeed)
+    // intervalRef.current = Metronome.play(volume,metronomeSpeed)
+    BackgroundTimer.clearInterval(intervalRef.current)
+    intervalRef.current = Metronome.playBackground(volume,metronomeSpeed)
   }
 
+  function metronomeOnPressHandler() {
+    if (isPlaying) {
+      stopMetronome()
+    }
+    else {
+      playMetronome()
+    }
+  }
   // useEffect(()=>{
   //   Audio.setAudioModeAsync({
   //     staysActiveInBackground: true,
@@ -75,7 +103,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text>Open up App.js to start working on your app!</Text>
-      <Button title={isPlaying?"Stop":"Play"} onPress={isPlaying?stopMetronome:playMetronome} ></Button>
+      <Button title={isPlaying?"Stop":"Play"} onPress={metronomeOnPressHandler} ></Button>
       <StatusBar style="auto" />
 
       <Slider 
@@ -123,5 +151,3 @@ const styles = StyleSheet.create({
 //     }).catch((error) => { });
 //   }, metronomeSpeed);
 // }
-
-
