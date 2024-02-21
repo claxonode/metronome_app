@@ -1,31 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button, AppState } from 'react-native';
 import { useEffect,useState,useRef } from 'react';
-import {Audio} from 'expo-av'
 import Slider from '@react-native-community/slider';
-import bubblesound from "./assets/bubble.wav"
 import {bpmToMilliseconds} from "./utils/bpm.js"
-// import BackgroundJob from 'react-native-background-job'
 import BackgroundTimer from 'react-native-background-timer';
 
 import {setupAudio} from './utils/audio.js'
 import Metronome from './utils/metronome.js'
 
-// function play(volume,metronomeSpeed) {
-//   return setInterval(() => {
-//     //immediately play upon creation, then unload, catch do nothing?
-//     Audio.Sound.createAsync(
-//       audioFile,
-//       { shouldPlay: true, volume: volume }
-//     ).then((res) => {
-//       res.sound.setOnPlaybackStatusUpdate((status) => {
-//         if (!status.didJustFinish) return;
-//         //sound needs to be unloaded when sound finishes to prevent memory leaks
-//         res.sound.unloadAsync().catch(() => { });
-//       });
-//     }).catch((error) => { });
-//   }, metronomeSpeed);
-// }
 
 export default function App() {
   // const [sound,setSound] = useState()
@@ -40,11 +22,12 @@ export default function App() {
 
   useEffect(()=> {
     setupAudio();
+    return ()=> {
+      stopMetronome()
+    }
   },[]);
   useEffect(()=> {
     if (isPlaying) {
-      // stopMetronome()
-      // playMetronome()
       stopMetronome()
       playMetronome()
     }
@@ -71,35 +54,6 @@ export default function App() {
       playMetronome()
     }
   }
-  // useEffect(()=>{
-  //   Audio.setAudioModeAsync({
-  //     staysActiveInBackground: true,
-  //     playsInSilentModeIOS: true,
-  //     interruptionModeIOS:InterruptionModeIOS.DuckOthers,
-  //     interruptionModeAndroid:InterruptionModeAndroid.DuckOthers,
-  //     shouldDuckAndroid:true,
-  //     playThroughEarpieceAndroid:true
-  //   })
-  //   return sound? ()=> {
-  //     sound.unloadAsync();
-  //   } : undefined
-  // },[sound]);
-
-
-
-  // while (metronome === true) {
-  //   setTimeout(async()=> {
-  //     await sound.playAsync()
-  //   },500)
-  // }
-  // useEffect(()=>{
-  //   return sound ? ()=> {
-  //     console.log('Unloading Sound')
-  //     sound.unloadAsync()
-  //   }: undefined
-  // },[sound])
-
-
   return (
     <View style={styles.container}>
       <Text>Open up App.js to start working on your app!</Text>
@@ -136,18 +90,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-// function play(volume, metronomeSpeed) {
-//   return BackgroundTimer.setInterval(() => {
-//     //immediately play upon creation, then unload, catch do nothing?
-//     Audio.Sound.createAsync(
-//       audioFile,
-//       { shouldPlay: true, volume: volume }
-//     ).then((res) => {
-//       res.sound.setOnPlaybackStatusUpdate((status) => {
-//         if (!status.didJustFinish) return;
-//         //sound needs to be unloaded when sound finishes to prevent memory leaks
-//         res.sound.unloadAsync().catch(() => { });
-//       });
-//     }).catch((error) => { });
-//   }, metronomeSpeed);
-// }
