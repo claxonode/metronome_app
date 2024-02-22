@@ -8,6 +8,6 @@ export const setupAudio = () => {
         interruptionModeIOS:InterruptionModeIOS.DuckOthers,
         interruptionModeAndroid:InterruptionModeAndroid.DuckOthers,
         shouldDuckAndroid:true,
-        playThroughEarpieceAndroid:true
+        playThroughEarpieceAndroid:false,
       })
 }
